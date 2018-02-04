@@ -18,7 +18,7 @@ for _ in `seq $NUM_ATTEMPTS`; do
   fi
 
   echo Trying port $PORT
-  RESPONSE=$(! container_run client "nc -w 1 server ${PORT}")
+  RESPONSE=$(! container_run client "nc -w 1 192.168.101.2 ${PORT}")
   if [[ ! -z $RESPONSE ]]; then
     echo Got response from random port $PORT that should be blocked
     exit

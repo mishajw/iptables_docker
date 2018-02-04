@@ -12,8 +12,6 @@ function start_session {
   # TODO: Find a deterministic method of doing this
   echo Wait for containers to go up
   sleep 2
-
-  containers="client router server"
 }
 
 function end_session {

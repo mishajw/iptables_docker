@@ -2,26 +2,46 @@ version: "2.2"
 
 services:
   client:
-    build: .
+    build:
+      context: .
+    environment:
+      gateway_subaddress: 192.168.100
     networks:
-      static_network:
+      client_net:
         ipv4_address: 192.168.100.2
+    privileged: true
   router:
-    build: .
+    build:
+      context: .
+    environment:
+      gateway_subaddress: 192.168.100
     networks:
-      static_network:
+      client_net:
         ipv4_address: 192.168.100.1
+      server_net:
+        ipv4_address: 192.168.101.1
+    privileged: true
   server:
-    build: .
+    build:
+      context: .
+    environment:
+      gateway_subaddress: 192.168.101
     networks:
-      static_network:
+      server_net:
         ipv4_address: 192.168.101.2
     privileged: true
 
 networks:
-  static_network:
+  client_net:
     ipam:
       config:
-        - subnet: 192.168.0.0/16
-          ip_range: 192.168.0.0/16
+        - subnet: 192.168.100.0/24
+          ip_range: 192.168.100.0/24
+          gateway: 192.168.100.123
+  server_net:
+    ipam:
+      config:
+        - subnet: 192.168.101.0/24
+          ip_range: 192.168.101.0/24
+          gateway: 192.168.101.123
 

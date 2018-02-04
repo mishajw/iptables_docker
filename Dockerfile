@@ -13,5 +13,10 @@ RUN \
 
 WORKDIR /var/www
 RUN echo "Hello, world!" >> index.html
-CMD /usr/sbin/sshd & python -m http.server 80
+CMD \
+  # TODO: Try and move this to build-time
+  route add default gw ${gateway_subaddress}.1 && \
+  route del -net 0.0.0.0 gw ${gateway_subaddress}.123 && \
+  /usr/sbin/sshd & \
+  python -m http.server 80
 
