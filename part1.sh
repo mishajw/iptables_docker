@@ -11,9 +11,7 @@ for c1 in $containers; do
     fi
 
     RESPONSE=$(
-      docker exec -it iptablesdocker_${c1}_1 \
-        wget ${c2} -q -O - | tr -d '[:space:]')
-    RESPONSE=$(echo "$RESPONSE")
+      container_run $c1 "wget ${c2} -q -O -" | tr -d '[:space:]')
 
     if [ "$RESPONSE" = "Hello,world!" ]; then
       echo Succeeded getting $c2 page from $c1
@@ -22,8 +20,8 @@ for c1 in $containers; do
     fi
 
     RESPONSE=$(
-      docker exec -it iptablesdocker_${c1}_1 \
-        ssh -q -o StrictHostKeyChecking=no $c2 printf '%s' success)
+      container_run $c1 \
+        "ssh -q -o StrictHostKeyChecking=no $c2 printf '%s' success")
 
     if [ "$RESPONSE" = "success" ]; then
       echo Succeeded ssh\'ing from $c1 to $c2

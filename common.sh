@@ -21,3 +21,11 @@ function end_session {
   docker-compose down
 }
 
+function container_run {
+  CONTAINER_NAME=$1
+  RUN_COMMAND=$2
+
+  docker exec -it iptablesdocker_${CONTAINER_NAME}_1 \
+    $RUN_COMMAND
+}
+
