@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+NUM_ATTEMPTS=10
+
 function start_session {
   set -e
 
@@ -27,5 +29,42 @@ function container_run {
     $RUN_COMMAND
 }
 
-sshq="ssh -q -o StrictHostKeyChecking=no"
+sshq="ssh -q -o StrictHostKeyChecking=no -o ConnectTimeout=1"
+
+function check_client_ssh_server {
+  echo Checking client can ssh to server
+  RESPONSE=$(container_run client "$sshq 192.168.101.2 echo -n success")
+  if [ "$RESPONSE" != "success" ]; then
+    echo Failed to ssh from client to server
+    exit
+  fi
+}
+
+function check_client_not_curl_server {
+  echo Checking client can not curl server
+  RESPONSE=$(! container_run client "curl 192.168.101.2 --connect-timeout 1")
+  # Checks if curl response contains 28, the error code for timeout
+  if [[ "$RESPONSE" != *"28"* ]]; then
+    echo Client could still curl from server
+    exit
+  fi
+}
+
+function check_client_not_non_ssh_server {
+  echo Checking client can not connect to non-ssh server ports
+  for _ in `seq $NUM_ATTEMPTS`; do
+    # Pick a random port not equal to 22
+    PORT=$(($RANDOM % 65534 + 1))
+    if [ "$PORT" = "22" ]; then
+      continue
+    fi
+
+    echo Trying port $PORT
+    RESPONSE=$(! container_run client "nc -w 1 192.168.101.2 ${PORT}")
+    if [[ ! -z $RESPONSE ]]; then
+      echo Got response from random port $PORT that should be blocked
+      exit
+    fi
+  done
+}
 
