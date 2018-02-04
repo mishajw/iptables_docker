@@ -25,7 +25,14 @@ for c1 in $containers; do
       docker exec -it iptablesdocker_${c1}_1 \
         wget ${c2}:8000 -q -O -
     )
-    echo Got $RESPONSE
+    # Remove whitespace
+    RESPONSE=$(echo "$RESPONSE" | tr -d '[:space:]')
+
+    if [ "$RESPONSE" = "Hello,world!" ]; then
+      echo Succeeded
+    else
+      exit
+    fi
   done
 done
 
