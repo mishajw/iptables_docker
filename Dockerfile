@@ -13,5 +13,5 @@ RUN \
 
 WORKDIR /var/www
 RUN echo "Hello, world!" >> index.html
-CMD /usr/sbin/sshd & python -m http.server
+CMD /usr/sbin/sshd & python -m http.server 80
 

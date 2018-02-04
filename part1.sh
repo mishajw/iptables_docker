@@ -12,7 +12,7 @@ for c1 in $containers; do
 
     RESPONSE=$(
       docker exec -it iptablesdocker_${c1}_1 \
-        wget ${c2}:8000 -q -O - | tr -d '[:space:]')
+        wget ${c2} -q -O - | tr -d '[:space:]')
     RESPONSE=$(echo "$RESPONSE")
 
     if [ "$RESPONSE" = "Hello,world!" ]; then
