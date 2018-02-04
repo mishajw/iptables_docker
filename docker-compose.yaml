@@ -3,15 +3,25 @@ version: "2.2"
 services:
   client:
     build: .
-    ports:
-      - "8000:80"
+    networks:
+      static_network:
+        ipv4_address: 192.168.100.2
   router:
     build: .
-    ports:
-      - "8001:80"
+    networks:
+      static_network:
+        ipv4_address: 192.168.100.1
   server:
     build: .
-    ports:
-      - "8002:80"
+    networks:
+      static_network:
+        ipv4_address: 192.168.101.2
     privileged: true
+
+networks:
+  static_network:
+    ipam:
+      config:
+        - subnet: 192.168.0.0/16
+          ip_range: 192.168.0.0/16
 
