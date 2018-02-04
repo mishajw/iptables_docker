@@ -29,3 +29,5 @@ function container_run {
     $RUN_COMMAND
 }
 
+sshq="ssh -q -o StrictHostKeyChecking=no"
+

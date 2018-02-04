@@ -21,7 +21,7 @@ for c1 in $containers; do
 
     RESPONSE=$(
       container_run $c1 \
-        "ssh -q -o StrictHostKeyChecking=no $c2 printf '%s' success")
+        "$sshq $c2 printf '%s' success")
 
     if [ "$RESPONSE" = "success" ]; then
       echo Succeeded ssh\'ing from $c1 to $c2
