@@ -1,18 +1,8 @@
 #!/usr/bin/env bash
 
-set -e
+source common.sh
 
-echo Bringing up containers
-docker-compose up -d
-
-echo Containers running:
-docker ps -a
-
-# TODO: Find a deterministic method of doing this
-echo Wait for containers to go up
-sleep 2
-
-containers="client router server"
+start_session
 
 for c1 in $containers; do
   for c2 in $containers; do
@@ -36,7 +26,5 @@ for c1 in $containers; do
   done
 done
 
-
-echo Bringing down containers
-docker-compose down
+end_session
 
