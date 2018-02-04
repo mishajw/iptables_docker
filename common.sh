@@ -4,7 +4,7 @@ function start_session {
   set -e
 
   echo Bringing up containers
-  docker-compose up -d
+  docker-compose up --build --force-recreate -d
 
   echo Containers running:
   docker ps -a
