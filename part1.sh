@@ -12,24 +12,21 @@ for c1 in $containers; do
 
     RESPONSE=$(
       container_run $c1 "wget ${c2} -q -O -" | tr -d '[:space:]')
-
-    if [ "$RESPONSE" = "Hello,world!" ]; then
-      echo Succeeded getting $c2 page from $c1
-    else
+    if [ "$RESPONSE" != "Hello,world!" ]; then
+      echo Couldn not get page as $c1 from $c2
       exit
     fi
 
     RESPONSE=$(
       container_run $c1 \
         "$sshq $c2 printf '%s' success")
-
-    if [ "$RESPONSE" = "success" ]; then
-      echo Succeeded ssh\'ing from $c1 to $c2
-    else
-      exit
+    if [ "$RESPONSE" != "success" ]; then
+      echo Could not ssh from $c1 to $c2
     fi
   done
 done
+
+echo Success
 
 end_session
 
