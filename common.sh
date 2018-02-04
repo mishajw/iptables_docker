@@ -29,6 +29,13 @@ function container_run {
     $RUN_COMMAND
 }
 
+function container_run_file {
+  CONTAINER_NAME=$1
+  FILE_NAME=$2
+
+  docker exec -i iptablesdocker_${CONTAINER_NAME}_1 sh < $FILE_NAME
+}
+
 sshq="ssh -q -o StrictHostKeyChecking=no -o ConnectTimeout=1"
 
 function check_client_ssh_server {

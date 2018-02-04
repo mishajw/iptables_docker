@@ -5,8 +5,7 @@ source common.sh
 start_session
 
 echo Blocking all ports but 22 on server
-container_run server \
-  "iptables --append INPUT --protocol tcp ! --destination-port 22 -j DROP"
+container_run_file server part3.sh
 
 check_client_ssh_server
 check_client_not_non_ssh_server
