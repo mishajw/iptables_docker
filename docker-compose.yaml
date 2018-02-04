@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  client:
+    build: .
+    ports:
+      - "8000:8000"
+  router:
+    build: .
+    ports:
+      - "8001:8000"
+  server:
+    build: .
+    ports:
+      - "8002:8000"
+
