@@ -1,7 +1,7 @@
 FROM python:3.6-alpine
 
 RUN \
-  apk -U add bash openssh curl iptables && \
+  apk -U add bash openssh curl iptables ulogd && \
   rm -rf /tmp/* /var/cache/apk/* && \
   for key in rsa dsa ecdsa ed25519; do \
     ssh-keygen -f /etc/ssh/ssh_host_${key}_key -N '' -t ${key}; \

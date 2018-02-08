@@ -1,4 +1,15 @@
-#!usr/bin/env bash
+#!/usr/bin/env bash
+
+# If the limit is less than 1/sec, log it and drop it
+iptables --delete-chain LOGANDDROP
+iptables --new-chain LOGANDDROP
+iptables --append LOGANDDROP \
+  --jump NFLOG \
+  --nflog-prefix "iptables dropped packet:"
+iptables --append LOGANDDROP \
+  --jump DROP
+
+# Copied from `./part4.sh`, replacing `DROP` with `LOGANDDROP`
 
 # Allow packets that go from client to server on port 80
 iptables --append FORWARD \
@@ -15,12 +26,4 @@ iptables --append FORWARD \
 
 # If neither of the above rules match, drop the packet
 iptables --append FORWARD -j LOGANDDROP
-
-# # This blocks all connections between client and server apart
-# # from 22, but does not affect other machines
-# iptables --append FORWARD \
-#   --protocol tcp \
-#   -s 192.168.100.2 \
-#   -d 192.168.101.2 \
-#   ! --destination-port 22 -j DROP
 
