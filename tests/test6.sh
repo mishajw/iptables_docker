@@ -32,7 +32,19 @@ for s in "${CHECK_LOGS[@]}"; do
   docker exec -ti iptablesdocker_router_1 grep "$s" $LOG_PATH
 done
 
-# TODO: Add test for log limit
+echo Spamming blocked messages from client to server
+for _ in `seq 10`; do
+  ! container_run client "curl 192.168.101.2:12345 --connect-timeout 0.001"
+done
+
+echo Checking rate limiting logs
+NUM_LOGS=$(container_run router "grep -c 12345 /var/log/ulogd_syslogemu.log")
+if [ "$NUM_LOGS" -ge "10" ]; then
+  echo Router failed to rate limit logs
+  exit
+fi
+
+echo Success
 
 end_session
 

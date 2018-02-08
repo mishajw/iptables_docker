@@ -4,6 +4,11 @@
 iptables --delete-chain LOGANDDROP
 iptables --new-chain LOGANDDROP
 iptables --append LOGANDDROP \
+  --match hashlimit \
+  --hashlimit-name "LOGANDDROP" \
+  --hashlimit-mode srcip,dstport \
+  --hashlimit-upto 1/second \
+  --hashlimit-burst 1 \
   --jump NFLOG \
   --nflog-prefix "iptables dropped packet:"
 iptables --append LOGANDDROP \
