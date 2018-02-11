@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 # If the limit is less than 1/sec, log it and drop it
-iptables --delete-chain LOGANDDROP
 iptables --new-chain LOGANDDROP
 iptables --append LOGANDDROP \
   --match hashlimit \
