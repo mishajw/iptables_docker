@@ -51,6 +51,7 @@ function check_client_not_curl_server {
   echo Checking client can not curl server
   RESPONSE=$(! container_run client "curl 192.168.101.2 --connect-timeout 1")
   # Checks if curl response contains 28, the error code for timeout
+  # TODO: Check error code returned instead of searching string
   if [[ "$RESPONSE" != *"28"* ]]; then
     echo Client could still curl from server
     exit
