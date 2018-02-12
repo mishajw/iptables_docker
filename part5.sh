@@ -19,7 +19,9 @@ iptables --append FORWARD \
 
 # Handle broadcast rule
 iptables --append FORWARD \
-  --destination 192.168.101.255 \
+  --destination 192.168.100.255,192.168.101.255 \
+  --m pkttype \
+  --pkt-type broadcast \
   --jump DROP
 # Add this rule first so we accept connections from 192.168.{100,101}.0/24
 iptables --append FORWARD \
