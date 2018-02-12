@@ -1,6 +1,6 @@
 # Network Security - Build a Linux Firewall (hosted [here](https://github.com/mishajw/iptables_docker))
 
-For this assignment, I decided to use Docker as the environment for setting up the virtual machines (or in this case containers) as a learning experience. This yielded many pros and cons (quite a lot more cons than anticipated!), which I will discuss in the conclusion.
+For this assignment, I decided to use Docker as the environment for setting up the virtual machines (or in this case containers) as a learning experience - Docker is a tool I've been meaning to learn for a while. This yielded many pros and cons (quite a lot more cons than anticipated!), which I will discuss in the conclusion.
 
 Because of docker, all containers were started and torn down at test time, so no clean up of `iptables` was needed in any of the scripts. This could easily be amended by putting in `iptables -F` at the beginning of every script (and removing any chains defined in the rules, as is the case for part 6).
 
@@ -13,6 +13,10 @@ for i in `seq 1 6`; do
   ./tests/test${i}.sh
 done
 ```
+
+Each test will start all containers, run tests, print "Success" if the tests were successful, and stop all containers. If the tests are unsuccessful, then the reasons for this are printed instead.
+
+All parts are tested with test scripts, with the exception of some sections of part 5 which were more difficult to test - if I had had more time for this assignment, I would have completed these. Instead I detail how I manually tested this.
 
 ## Part 1 - Setup
 
@@ -29,6 +33,25 @@ route del -net 0.0.0.0 gw ${gateway_subaddress}.123 && \
 ```
 
 This successfully overrides the gateway introduced by docker.
+
+The Dockerfile is also relatively simple. I use a lightweight Alpine Linux base image with Python 3.6 installed. Python is only used to set up a simple HTTP server.
+
+The Dockerfile then runs a series of commands:
+
+1) Installs a bunch of packages for the assignment including bash, openssh, curl, iptables.
+2) It then removes the cached package installation files to reduce the image size (after all, if we're using Alpine Linux, shouldn't we try to get the image to be as small as possible..?).
+3) The next thing we do is set up the SSH daemon. To do this, we need to:
+    1) Generate server keys for RSA, DSA, ECDSA, and ED25519.
+    2) Allow root login between the machines.
+    3) Allow password authentication for the machines.
+    4) Allow empty passwords.
+    5) Remove the `root` password*.
+4) Write `Hello, world!` to `/var/www` for the HTTP server
+5) Set up the gateways as discussed above, by removing the default and adding a new one with the address of the router.
+6) Starting the SSH daemon.
+7) Starting the HTTP server.
+
+\*Obviously all of this is horrible real-world practice (you probably shouldn't even have SSH running in containers)! But for the purposes of this assignment, it means we don't have to worry about sharing keys between the containers, or setting up multiple accounts for the simple purpose of testing SSH connections.
 
 In the tests for part 1, I loop through every pair of containers, and check that you can SSH and curl between them.
 
@@ -78,11 +101,30 @@ Once `nmap` was run with forged IPs from every blocked IP range, the `tcpdump` d
 
 This was a simple rule that dropped all packets that weren't from the IP range `192.168.101.0/24` on `server_net`. This was tested in the same way as the previous rules, but with the server and client reversed.
 
-Unfortunately, I didn't have time to write test scripts for this, but the testing was the same as above.
+Unfortunately, I didn't have time to write test scripts for this, but the testing was the same as above. I set up `tcpdump` on the client side, and grepped for packets coming from the IP address `192.168.102.234`, and then spoofed traffic from the server side using the `nmap` command detailed in the previous section. Before the `iptables` command was executed, the packets made it through:
 
-### Block Broadcast IPs
+```bash
+09:21:49.854486 IP 192.168.102.234.54627 > 192.168.100.2.12345: UDP, length 0
+```
 
-<!--- TODO: Complete section --->
+After the `iptables` commands were run, these packets did not make it through.
+
+### Block Broadcast Packets
+
+To block broadcast, the `iptables` command is quite simple: it only needs to specify the two network's broadcast IPs `192.168.{100,101}.255`, and specifiy (using the `pkttype` extention) to drop all broadcast packets.
+
+This was again tested manually. A broadcast packet was sent using:
+
+```bash
+echo test | nc -u 192.168.100.255
+```
+
+Unfortunately, this had no effect before the `iptables` rule was set up. I could not configure the containers to correctly handle broadcast packets. I suspect this could be one of several issues:
+
+1) The router was somehow configured to drop all broadcast packets at a lower level.
+2) The `nc` version in Alpine Linux does not support sending broadcast packets.
+
+However, once the `iptables` rule was added, you can see the dropped packet counter in `iptables` increase. This can be seen when you run `iptables -L -n` - each table has a dropped packet counter that is incremented when the chain drops a packet.
 
 ## Part 6
 
@@ -93,7 +135,7 @@ The `LOGANDDROP` chain used the `hashlimit` `iptables` extension. This extension
 2) `--hashlimit-upto 1/second` matches packets that have a rate of less than 1 per second.
 3) `--hashlimit-burst 1` gets rid of the burst functionality `hashlimit` brings, as we only care about raw packet rates.
 
-If this rule matches, we `jump` to the `NFLOG` chain. Originally, I tried to get this to work with the `LOG` chain, which redirects logs directly to `syslog`. However, this functionality was removed from LXC containers in linux, as per [this](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=69b34fb996b2eee3970548cf6eb516d3ecb5eeed) commit. However, `NFLOG` doesn't interface with `syslog`, so it could work. 
+If this rule matches, we `jump` to the `NFLOG` chain. Originally, I tried to get this to work with the `LOG` chain, which directs logs directly to `syslog`. However, this functionality was removed from LXC containers in linux, as per [this](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=69b34fb996b2eee3970548cf6eb516d3ecb5eeed) commit. However, `NFLOG` doesn't interface with `syslog`, so it worked a charm.
 
 To get this to work, I had to install the `ulogd` command, enable a line in it's configuration, and start it up. All of this can be seen in `./tests/part6.sh`.
 
@@ -104,3 +146,4 @@ To check the logs, the client would try and curl the server 10 times, and then w
 Overall, working with docker was a fun learning experience, although it introduced some issues along the way. Using `NFLOG` wasn't too hacky, but having to bypass docker's routing system manually using the `route` command felt like a hack, and it would be nice if there was an easier way to configure all of this within `docker-compose`. Especially as this seems like what could be a common usage of `docker-compose` in order to separate out containers in different networks, if some containers aren't as trusted as others.
 
 Docker also allowed for a reliable testing environment, removing state from all of the tests - so I didn't have to worry about experiments from previous sections affecting later ones. I also didn't have to worry about losing work that I had done inside containers, because as long as the work was in `./Dockerfile` or `./docker-compose.yaml` and committed, I could easily boot up the containers again.
+
