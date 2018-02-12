@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+iptables -F
+
 # TODO: This relies on docker setting up `server_net` on `eth1` for router
 CLIENT_IFACE=eth0
 SERVER_IFACE=eth1

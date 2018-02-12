@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+iptables --delete-chain LOGANDDROP
+iptables -F
+
 # If the limit is less than 1/sec, log it and drop it
 iptables --new-chain LOGANDDROP
 iptables --append LOGANDDROP \

@@ -1,5 +1,7 @@
 #!usr/bin/env bash
 
+iptables -F
+
 # Allow packets that go from client to server on port 80
 iptables --append FORWARD \
   --protocol tcp \
